@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Job Portal To-Do App</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    :root {
+      --bg-color: #f0f4f8;
+      --glass-bg: rgba(255, 255, 255, 0.1);
+      --text-color: #333;
+      --primary-color: #7f5af0;
+      --secondary-color: #2cb67d;
+      --danger-color: #ef4565;
+    }
+
+    body.dark {
+      --bg-color: #0f0f0f;
+      --glass-bg: rgba(255, 255, 255, 0.06);
+      --text-color: #f0f0f0;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', sans-serif;
+    }
+
+    body {
+      background: var(--bg-color);
+      color: var(--text-color);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      transition: 0.4s ease;
+    }
+
+    .container {
+      width: 90%;
+      max-width: 600px;
+      padding: 30px;
+      border-radius: 25px;
+      backdrop-filter: blur(10px);
+      background: var(--glass-bg);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 28px;
+      margin-bottom: 20px;
+      color: var(--text-color);
+    }
+
+    .input-section {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    input {
+      flex: 1;
+      padding: 12px;
+      border-radius: 10px;
+      border: 2px solid var(--primary-color);
+      font-size: 16px;
+      background: transparent;
+      color: var(--text-color);
+    }
+
+    button {
+      background: var(--primary-color);
+      color: white;
+      padding: 12px 18px;
+      border: none;
+      border-radius: 10px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.3s ease;
+      box-shadow: 0 0 10px var(--primary-color);
+    }
+
+    button:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 20px var(--primary-color);
+    }
+
+    .toggle-btn {
+      margin: 0 auto 20px;
+      display: block;
+      background: transparent;
+      color: var(--text-color);
+      border: 2px solid var(--primary-color);
+      padding: 8px 15px;
+      border-radius: 20px;
+      font-size: 14px;
+    }
+
+    ul {
+      list-style: none;
+    }
+
+    li {
+      background: rgba(255, 255, 255, 0.15);
+      margin-bottom: 12px;
+      padding: 12px 16px;
+      border-radius: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      backdrop-filter: blur(5px);
+      animation: slideIn 0.4s ease;
+    }
+
+    @keyframes slideIn {
+      from {
+        transform: translateY(10px);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    li.completed {
+      text-decoration: line-through;
+      color: gray;
+      background: rgba(200, 200, 200, 0.1);
+    }
+
+    .delete-btn {
+      background: var(--danger-color);
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .status {
+      font-size: 12px;
+      background: var(--secondary-color);
+      color: white;
+      padding: 2px 8px;
+      border-radius: 12px;
+      margin-left: 8px;
+    }
+
+    li.completed .status {
+      background: gray;
+    }
+
+    @media (max-width: 500px) {
+      .input-section {
+        flex-direction: column;
+      }
+
+      button {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <button class="toggle-btn" onclick="toggleMode()">🌙 Toggle Mode</button>
+    <h1>💼 Job Portal Tasks</h1>
+    <div class="input-section">
+      <input type="text" id="taskInput" placeholder="e.g., Upload Resume to Naukri">
+      <button onclick="addTask()">Add</button>
+    </div>
+    <ul id="taskList"></ul>
+  </div>
+
+  <script>
+    // Load tasks
+    window.onload = () => {
+      const savedTasks = JSON.parse(localStorage.getItem("tasks")) || [];
+      savedTasks.forEach(task => createTaskElement(task.text, task.completed));
+      if (localStorage.getItem("theme") === "dark") {
+        document.body.classList.add("dark");
+      }
+    };
+
+    function toggleMode() {
+      document.body.classList.toggle("dark");
+      const mode = document.body.classList.contains("dark") ? "dark" : "light";
+      localStorage.setItem("theme", mode);
+    }
+
+    function addTask() {
+      const input = document.getElementById("taskInput");
+      const taskText = input.value.trim();
+      if (taskText === "") return;
+      createTaskElement(taskText, false);
+      input.value = "";
+      saveTasks();
+    }
+
+    function createTaskElement(text, completed) {
+      const li = document.createElement("li");
+      li.innerHTML = `
+        <span>${text}<span class="status">${completed ? "Completed" : "Pending"}</span></span>
+        <button class="delete-btn">Delete</button>
+      `;
+
+      if (completed) li.classList.add("completed");
+
+      li.querySelector(".delete-btn").onclick = (e) => {
+        e.stopPropagation();
+        li.remove();
+        saveTasks();
+      };
+
+      li.addEventListener("click", () => {
+        li.classList.toggle("completed");
+        li.querySelector(".status").textContent = li.classList.contains("completed") ? "Completed" : "Pending";
+        saveTasks();
+      });
+
+      document.getElementById("taskList").appendChild(li);
+    }
+
+    function saveTasks() {
+      const tasks = [];
+      document.querySelectorAll("#taskList li").forEach(li => {
+        const taskText = li.querySelector("span").childNodes[0].textContent.trim();
+        const completed = li.classList.contains("completed");
+        tasks.push({ text: taskText, completed });
+      });
+      localStorage.setItem("tasks", JSON.stringify(tasks));
+    }
+  </script>
+</body>
+</html>
